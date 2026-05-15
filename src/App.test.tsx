@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/authStore';
 
 beforeEach(() => {
   window.history.pushState({}, '', '/');
+  delete document.body.dataset.theme;
   useAuthStore.getState().logoutUser();
 });
 
@@ -33,14 +34,15 @@ test('renders the welcome page when no user is logged in', () => {
   expect(screen.queryByRole('navigation', { name: /primary navigation/i })).not.toBeInTheDocument();
 });
 
-test('renders client cost dashboard after login', () => {
+test('renders logged-in home without expense details', () => {
   render(<App />);
 
   loginAsAlex();
 
-  expect(screen.getByText(/client cost preview/i)).toBeInTheDocument();
-  expect(screen.getByText(/expense breakdown/i)).toBeInTheDocument();
-  expect(screen.getByText(/hours worked by phase/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /welcome back, alex rivera/i })).toBeInTheDocument();
+  expect(screen.getByText(/review client spend/i)).toBeInTheDocument();
+  expect(screen.queryByText(/expense breakdown/i)).not.toBeInTheDocument();
+  expect(screen.queryByText(/hours worked by phase/i)).not.toBeInTheDocument();
   expect(screen.getByRole('navigation', { name: /primary navigation/i })).toBeInTheDocument();
 });
 
@@ -53,11 +55,13 @@ test('navigates between top navigation links', () => {
   expect(screen.getAllByText(/support/i).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('link', { name: /my expenses/i }));
-  expect(screen.getByRole('heading', { name: /hello world/i })).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: /client spending overview/i })
+  ).toBeInTheDocument();
   expect(screen.getAllByText(/my expenses/i).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('link', { name: /home/i }));
-  expect(screen.getByText(/client cost preview/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /welcome back, alex rivera/i })).toBeInTheDocument();
 });
 
 test('opens the settings dropdown from the top navigation', () => {
@@ -76,8 +80,61 @@ test('navigates to settings from the settings dropdown', () => {
   fireEvent.click(screen.getByRole('button', { name: /open settings menu/i }));
   fireEvent.click(screen.getByRole('menuitem', { name: /settings/i }));
 
-  expect(screen.getByRole('heading', { name: /hello world/i })).toBeInTheDocument();
-  expect(screen.getAllByText(/settings/i).length).toBeGreaterThan(0);
+  expect(screen.getByRole('heading', { name: /account settings/i })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /light or dark mode/i })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /change your email/i })).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /change your password/i })).toBeInTheDocument();
+});
+
+test('updates appearance mode from settings', () => {
+  render(<App />);
+  loginAsAlex();
+
+  fireEvent.click(screen.getByRole('button', { name: /open settings menu/i }));
+  fireEvent.click(screen.getByRole('menuitem', { name: /settings/i }));
+  fireEvent.click(screen.getByRole('switch', { name: /use dark mode/i }));
+
+  expect(document.body).toHaveAttribute('data-theme', 'dark');
+});
+
+test('updates the current user email from settings', () => {
+  render(<App />);
+  loginAsAlex();
+
+  fireEvent.click(screen.getByRole('button', { name: /open settings menu/i }));
+  fireEvent.click(screen.getByRole('menuitem', { name: /settings/i }));
+  fireEvent.change(screen.getByLabelText(/email address/i), {
+    target: { value: 'alex.updated@example.com' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /save email/i }));
+
+  expect(screen.getByText(/email updated/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /open settings menu/i }));
+  fireEvent.click(screen.getByRole('menuitem', { name: /profile/i }));
+
+  expect(screen.getByText(/alex.updated@example.com/i)).toBeInTheDocument();
+});
+
+test('updates the current user password from settings', () => {
+  render(<App />);
+  loginAsAlex();
+
+  fireEvent.click(screen.getByRole('button', { name: /open settings menu/i }));
+  fireEvent.click(screen.getByRole('menuitem', { name: /settings/i }));
+  fireEvent.change(screen.getByLabelText(/current password/i), {
+    target: { value: 'password123' },
+  });
+  fireEvent.change(screen.getByLabelText(/^new password$/i), {
+    target: { value: 'newpass123' },
+  });
+  fireEvent.change(screen.getByLabelText(/confirm new password/i), {
+    target: { value: 'newpass123' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /save password/i }));
+
+  expect(screen.getByText(/password updated/i)).toBeInTheDocument();
+  expect(useAuthStore.getState().currentUser?.password).toBe('newpass123');
 });
 
 test('shows profile details for the logged in user', () => {
@@ -109,12 +166,11 @@ test('logs in with a valid mock user and updates the auth button', () => {
   });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 
-  expect(screen.getByText(/client cost preview/i)).toBeInTheDocument();
-  expect(screen.getByText(/welcome back, alex rivera/i)).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /welcome back, alex rivera/i })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
 });
 
-test('shows customer-specific mock costs after login', () => {
+test('shows client spend totals on the expenses page', () => {
   render(<App />);
 
   clickLoginButton();
@@ -125,6 +181,7 @@ test('shows customer-specific mock costs after login', () => {
     target: { value: 'support2026' },
   });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  fireEvent.click(screen.getByRole('link', { name: /my expenses/i }));
 
   expect(screen.getAllByText(/harbor retail partners/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText('$17,100').length).toBeGreaterThan(0);
@@ -138,6 +195,7 @@ test('shows customer-specific mock costs after login', () => {
     target: { value: 'dashboard' },
   });
   fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+  fireEvent.click(screen.getByRole('link', { name: /my expenses/i }));
 
   expect(screen.getAllByText(/summit field operations/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText('$30,000').length).toBeGreaterThan(0);

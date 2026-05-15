@@ -1,8 +1,16 @@
 import React, { FormEvent, MouseEvent, useEffect, useState } from 'react';
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import './App.css';
 import { mockUsers } from './assets/data';
 import { useAuthStore } from './stores/authStore';
-import { CustomerCostProfile, MockUser } from './types';
+import { MockUser } from './types';
 
 type RoutePath =
   | '/'
@@ -13,55 +21,16 @@ type RoutePath =
   | '/settings'
   | '/profile';
 
-const defaultCostProfile: CustomerCostProfile = {
-  customerName: 'Acme Services',
-  monthlyBudget: 20800,
-  budgetNote: 'Tracking under the planned monthly project budget.',
-  monthlyExpenses: [
-    {
-      category: 'Strategy',
-      description: 'Planning, discovery, and project coordination',
-      amount: 2850,
-      color: '#2f7d6d',
-    },
-    {
-      category: 'Design',
-      description: 'Wireframes, interface polish, and review cycles',
-      amount: 3200,
-      color: '#d17832',
-    },
-    {
-      category: 'Development',
-      description: 'Application features, integrations, and fixes',
-      amount: 7400,
-      color: '#4267ac',
-    },
-    {
-      category: 'Support',
-      description: 'QA, launch help, and monthly maintenance',
-      amount: 1550,
-      color: '#7a5a9e',
-    },
-  ],
-  projectHours: [
-    { name: 'Planning', hours: 22, color: '#2f7d6d' },
-    { name: 'Design', hours: 34, color: '#d17832' },
-    { name: 'Build', hours: 76, color: '#4267ac' },
-    { name: 'QA', hours: 18, color: '#7a5a9e' },
-  ],
-  costForecast: [
-    { month: 'May', amount: 12800 },
-    { month: 'Jun', amount: 15000 },
-    { month: 'Jul', amount: 13850 },
-    { month: 'Aug', amount: 12100 },
-  ],
-};
+type ThemeMode = 'light' | 'dark';
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
   maximumFractionDigits: 0,
 });
+
+const getTotalExpenses = (user: MockUser) =>
+  user.monthlyExpenses.reduce((total, expense) => total + expense.amount, 0);
 
 function SettingsIcon() {
   return (
@@ -96,12 +65,14 @@ const getCurrentRoute = (): RoutePath => {
 };
 
 function App() {
-  const { currentUser, isLoggedIn, loginUser, logoutUser } = useAuthStore();
+  const { currentUser, isLoggedIn, loginUser, logoutUser, updateCurrentUser } =
+    useAuthStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentRoute, setCurrentRoute] = useState<RoutePath>(getCurrentRoute);
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light');
 
   useEffect(() => {
     const handlePopState = () => {
@@ -113,6 +84,10 @@ function App() {
 
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  useEffect(() => {
+    document.body.dataset.theme = themeMode;
+  }, [themeMode]);
 
   const navigate = (path: RoutePath) => {
     window.history.pushState({}, '', path);
@@ -127,19 +102,6 @@ function App() {
     event.preventDefault();
     navigate(path);
   };
-
-  const activeCostProfile = currentUser ?? defaultCostProfile;
-  const { monthlyExpenses, projectHours, costForecast } = activeCostProfile;
-  const totalExpenses = monthlyExpenses.reduce(
-    (total, expense) => total + expense.amount,
-    0
-  );
-  const totalHours = projectHours.reduce((total, phase) => total + phase.hours, 0);
-  const highestMonthlyCost = Math.max(...costForecast.map((item) => item.amount));
-  const highestPhaseHours = Math.max(...projectHours.map((phase) => phase.hours));
-  const budgetUsed = Math.round(
-    (totalExpenses / activeCostProfile.monthlyBudget) * 100
-  );
 
   const handleAuthButtonClick = () => {
     if (isLoggedIn) {
@@ -194,132 +156,19 @@ function App() {
   );
 
   const renderDashboard = () => (
-    <>
-      <section className="hero-panel">
-        <div className="hero-copy">
-          <p className="eyebrow">Client cost preview</p>
-          <h1>Know what this month is going to cost before the invoice arrives.</h1>
-          <p className="hero-summary">
-            A clear monthly view for {activeCostProfile.customerName}, showing
-            where the money is going and how many hours have been worked.
-          </p>
-          {currentUser && (
-            <p className="welcome-message">
-              Welcome back, {currentUser.name}. You are viewing{' '}
-              {currentUser.customerName}.
-            </p>
-          )}
-        </div>
-
-        <div className="total-card" aria-label="Projected monthly total">
-          <span>Projected this month</span>
-          <strong>{currencyFormatter.format(totalExpenses)}</strong>
-          <p>Mock estimate based on active work categories</p>
-        </div>
-      </section>
-
-      <section className="metrics-grid" aria-label="Monthly cost summary">
-        <article className="summary-card">
-          <span className="summary-label">Monthly budget used</span>
-          <strong>{budgetUsed}%</strong>
-          <p>{activeCostProfile.budgetNote}</p>
-        </article>
-        <article className="summary-card">
-          <span className="summary-label">Hours worked</span>
-          <strong>{totalHours}</strong>
-          <p>Logged against current project milestones.</p>
-        </article>
-        <article className="summary-card">
-          <span className="summary-label">Average hourly cost</span>
-          <strong>{currencyFormatter.format(totalExpenses / totalHours)}</strong>
-          <p>Blended rate across all mock work categories.</p>
-        </article>
-      </section>
-
-      <section className="content-grid">
-        <div className="expenses-panel">
-          <div className="section-heading">
-            <p className="eyebrow">Monthly expenses</p>
-            <h2>Expense breakdown</h2>
-          </div>
-
-          <div className="expense-list">
-            {monthlyExpenses.map((expense) => {
-              const percentage = Math.round((expense.amount / totalExpenses) * 100);
-
-              return (
-                <article className="expense-row" key={expense.category}>
-                  <div
-                    className="expense-marker"
-                    style={{ backgroundColor: expense.color }}
-                    aria-hidden="true"
-                  />
-                  <div>
-                    <h3>{expense.category}</h3>
-                    <p>{expense.description}</p>
-                  </div>
-                  <div className="expense-amount">
-                    <strong>{currencyFormatter.format(expense.amount)}</strong>
-                    <span>{percentage}%</span>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="forecast-panel" aria-label="Projected cost trend">
-          <div className="section-heading">
-            <p className="eyebrow">Cost outlook</p>
-            <h2>Projected monthly cost</h2>
-          </div>
-          <div className="forecast-chart">
-            {costForecast.map((item) => (
-              <div className="forecast-bar-group" key={item.month}>
-                <div className="forecast-value">
-                  {currencyFormatter.format(item.amount)}
-                </div>
-                <div className="forecast-track">
-                  <div
-                    className="forecast-bar"
-                    style={{ height: `${(item.amount / highestMonthlyCost) * 100}%` }}
-                  />
-                </div>
-                <span>{item.month}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="hours-panel" aria-label="Hours worked by project phase">
-        <div className="section-heading">
-          <p className="eyebrow">Project activity</p>
-          <h2>Hours worked by phase</h2>
-        </div>
-
-        <div className="hours-chart">
-          {projectHours.map((phase) => (
-            <div className="hours-row" key={phase.name}>
-              <div className="hours-label">
-                <strong>{phase.name}</strong>
-                <span>{phase.hours} hours</span>
-              </div>
-              <div className="hours-track">
-                <div
-                  className="hours-bar"
-                  style={{
-                    width: `${(phase.hours / highestPhaseHours) * 100}%`,
-                    backgroundColor: phase.color,
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </>
+    <section className="home-dashboard" aria-labelledby="home-dashboard-heading">
+      <div className="home-dashboard-copy">
+        <p className="eyebrow">Customer service portal</p>
+        <h1 id="home-dashboard-heading">Welcome back, {currentUser?.name}.</h1>
+        <p>
+          Use the navigation to review client spend, open support resources, and
+          manage your profile.
+        </p>
+      </div>
+    </section>
   );
+
+  const renderExpensesPage = () => <ExpensesPage currentUser={currentUser} />;
 
   const renderLoginPage = () => (
     <section className="login-page" aria-labelledby="login-heading">
@@ -423,13 +272,6 @@ function App() {
                 Home
               </a>
               <a
-                className={`nav-link${currentRoute === '/support' ? ' active' : ''}`}
-                href="/support"
-                onClick={(event) => handleNavigationClick(event, '/support')}
-              >
-                Support
-              </a>
-              <a
                 className={`nav-link${
                   currentRoute === '/my-expenses' ? ' active' : ''
                 }`}
@@ -437,6 +279,13 @@ function App() {
                 onClick={(event) => handleNavigationClick(event, '/my-expenses')}
               >
                 My Expenses
+              </a>
+              <a
+                className={`nav-link${currentRoute === '/support' ? ' active' : ''}`}
+                href="/support"
+                onClick={(event) => handleNavigationClick(event, '/support')}
+              >
+                Support
               </a>
             </div>
 
@@ -493,8 +342,15 @@ function App() {
         {currentRoute === '/login' && renderLoginPage()}
         {currentRoute === '/signup' && renderSignupPage()}
         {currentRoute === '/support' && <PlaceholderPage title="Support" />}
-        {currentRoute === '/my-expenses' && <PlaceholderPage title="My Expenses" />}
-        {currentRoute === '/settings' && <PlaceholderPage title="Settings" />}
+        {currentRoute === '/my-expenses' && renderExpensesPage()}
+        {currentRoute === '/settings' && (
+          <SettingsPage
+            currentUser={currentUser}
+            themeMode={themeMode}
+            onThemeChange={setThemeMode}
+            onUpdateCurrentUser={updateCurrentUser}
+          />
+        )}
         {currentRoute === '/profile' && <ProfilePage currentUser={currentUser} />}
       </main>
     </>
@@ -506,6 +362,273 @@ function PlaceholderPage({ title }: { title: string }) {
     <section className="placeholder-page" aria-labelledby="placeholder-heading">
       <p className="eyebrow">{title}</p>
       <h1 id="placeholder-heading">Hello world</h1>
+    </section>
+  );
+}
+
+function SettingsPage({
+  currentUser,
+  themeMode,
+  onThemeChange,
+  onUpdateCurrentUser,
+}: {
+  currentUser: MockUser | null;
+  themeMode: ThemeMode;
+  onThemeChange: (themeMode: ThemeMode) => void;
+  onUpdateCurrentUser: (updates: Partial<Pick<MockUser, 'email' | 'password'>>) => void;
+}) {
+  const [newEmail, setNewEmail] = useState(currentUser?.email ?? '');
+  const [emailMessage, setEmailMessage] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordMessage, setPasswordMessage] = useState('');
+
+  useEffect(() => {
+    setNewEmail(currentUser?.email ?? '');
+  }, [currentUser?.email]);
+
+  const handleEmailSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const trimmedEmail = newEmail.trim();
+
+    if (!trimmedEmail) {
+      setEmailMessage('Enter a valid email address.');
+      return;
+    }
+
+    onUpdateCurrentUser({ email: trimmedEmail });
+    setEmailMessage('Email updated.');
+  };
+
+  const handlePasswordSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (currentPassword !== currentUser?.password) {
+      setPasswordMessage('Current password does not match.');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordMessage('New password must be at least 8 characters.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage('New passwords do not match.');
+      return;
+    }
+
+    onUpdateCurrentUser({ password: newPassword });
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordMessage('Password updated.');
+  };
+
+  return (
+    <section className="settings-page" aria-labelledby="settings-heading">
+      <div className="settings-hero">
+        <p className="eyebrow">Settings</p>
+        <h1 id="settings-heading">Account settings</h1>
+      </div>
+
+      <div className="settings-grid">
+        <section className="settings-card theme-card" aria-labelledby="theme-heading">
+          <div>
+            <p className="eyebrow">Appearance</p>
+            <h2 id="theme-heading">Light or dark mode</h2>
+            <p>Choose the display mode for this dashboard.</p>
+          </div>
+          <label className="theme-switch">
+            <span>Light</span>
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Use dark mode"
+              checked={themeMode === 'dark'}
+              onChange={(event) =>
+                onThemeChange(event.target.checked ? 'dark' : 'light')
+              }
+            />
+            <span className="theme-slider" aria-hidden="true" />
+            <span>Dark</span>
+          </label>
+        </section>
+
+        <form
+          className="settings-card settings-form"
+          aria-labelledby="email-heading"
+          onSubmit={handleEmailSubmit}
+        >
+          <div>
+            <p className="eyebrow">Email</p>
+            <h2 id="email-heading">Change your email</h2>
+          </div>
+          <label htmlFor="settings-email">Email address</label>
+          <input
+            id="settings-email"
+            name="settingsEmail"
+            type="email"
+            value={newEmail}
+            onChange={(event) => setNewEmail(event.target.value)}
+            autoComplete="email"
+            required
+          />
+          {emailMessage && <p className="settings-message">{emailMessage}</p>}
+          <button className="continue-button" type="submit">
+            Save email
+          </button>
+        </form>
+
+        <form
+          className="settings-card settings-form"
+          aria-labelledby="password-heading"
+          onSubmit={handlePasswordSubmit}
+        >
+          <div>
+            <p className="eyebrow">Password</p>
+            <h2 id="password-heading">Change your password</h2>
+          </div>
+          <label htmlFor="current-password">Current password</label>
+          <input
+            id="current-password"
+            name="currentPassword"
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            autoComplete="current-password"
+            required
+          />
+
+          <label htmlFor="new-password">New password</label>
+          <input
+            id="new-password"
+            name="newPassword"
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            autoComplete="new-password"
+            required
+          />
+
+          <label htmlFor="settings-confirm-password">Confirm new password</label>
+          <input
+            id="settings-confirm-password"
+            name="confirmPassword"
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            autoComplete="new-password"
+            required
+          />
+          {passwordMessage && <p className="settings-message">{passwordMessage}</p>}
+          <button className="continue-button" type="submit">
+            Save password
+          </button>
+        </form>
+      </div>
+    </section>
+  );
+}
+
+function ExpensesPage({ currentUser }: { currentUser: MockUser | null }) {
+  const clientSpend = mockUsers.map((user) => ({
+    client: user.customerName,
+    company: user.company,
+    total: getTotalExpenses(user),
+    isCurrentUser: user.email === currentUser?.email,
+  }));
+  const highestSpend = Math.max(...clientSpend.map((client) => client.total));
+  const totalClientSpend = clientSpend.reduce((total, client) => total + client.total, 0);
+  const averageClientSpend = totalClientSpend / clientSpend.length;
+
+  return (
+    <section className="expenses-page" aria-labelledby="expenses-heading">
+      <div className="expenses-hero">
+        <div>
+          <p className="eyebrow">My expenses</p>
+          <h1 id="expenses-heading">Client spending overview</h1>
+          <p>
+            Compare how much each client is spending this month and quickly spot
+            accounts that need a closer look.
+          </p>
+        </div>
+      </div>
+
+      <section className="expense-summary-grid" aria-label="Client expense summary">
+        <article className="summary-card">
+          <span className="summary-label">Total client spend</span>
+          <strong>{currencyFormatter.format(totalClientSpend)}</strong>
+          <p>Combined monthly spend across all mock clients.</p>
+        </article>
+        <article className="summary-card">
+          <span className="summary-label">Average client spend</span>
+          <strong>{currencyFormatter.format(averageClientSpend)}</strong>
+          <p>Useful baseline for comparing active accounts.</p>
+        </article>
+        <article className="summary-card">
+          <span className="summary-label">Highest spender</span>
+          <strong>{currencyFormatter.format(highestSpend)}</strong>
+          <p>
+            {clientSpend.find((client) => client.total === highestSpend)?.client}
+          </p>
+        </article>
+      </section>
+
+      <section className="client-spend-panel" aria-label="Client spend chart">
+        <div className="section-heading">
+          <p className="eyebrow">Spend by client</p>
+          <h2>Monthly client spend</h2>
+        </div>
+        <div className="client-spend-chart">
+          <BarChart
+            width={960}
+            height={360}
+            data={clientSpend}
+            margin={{ top: 12, right: 18, left: 8, bottom: 36 }}
+          >
+            <CartesianGrid stroke="#d8e0dc" strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="client"
+              interval={0}
+              tick={{ fill: '#63716e', fontSize: 12, fontWeight: 700 }}
+              tickLine={false}
+              axisLine={{ stroke: '#d8e0dc' }}
+            />
+            <YAxis
+              tickFormatter={(value) => currencyFormatter.format(Number(value))}
+              tick={{ fill: '#63716e', fontSize: 12, fontWeight: 700 }}
+              tickLine={false}
+              axisLine={false}
+              width={82}
+            />
+            <Tooltip
+              formatter={(value) => [
+                currencyFormatter.format(Number(value)),
+                'Monthly spend',
+              ]}
+              labelFormatter={(label) => `${label}`}
+            />
+            <Bar dataKey="total" fill="#4267ac" radius={[8, 8, 0, 0]} />
+          </BarChart>
+        </div>
+      </section>
+
+      <section className="client-spend-list" aria-label="Client spend details">
+        {clientSpend.map((client) => (
+          <article
+            className={`client-spend-row${client.isCurrentUser ? ' active-client' : ''}`}
+            key={client.client}
+          >
+            <div>
+              <h3>{client.client}</h3>
+              <p>{client.company}</p>
+            </div>
+            <strong>{currencyFormatter.format(client.total)}</strong>
+          </article>
+        ))}
+      </section>
     </section>
   );
 }

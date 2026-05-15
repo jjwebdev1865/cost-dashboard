@@ -6,6 +6,7 @@ type AuthState = {
   isLoggedIn: boolean;
   loginUser: (user: MockUser) => void;
   logoutUser: () => void;
+  updateCurrentUser: (updates: Partial<Pick<MockUser, 'email' | 'password'>>) => void;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -13,4 +14,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: false,
   loginUser: (user) => set({ currentUser: user, isLoggedIn: true }),
   logoutUser: () => set({ currentUser: null, isLoggedIn: false }),
+  updateCurrentUser: (updates) =>
+    set((state) => ({
+      currentUser: state.currentUser
+        ? {
+            ...state.currentUser,
+            ...updates,
+          }
+        : null,
+    })),
 }));
