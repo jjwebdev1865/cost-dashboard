@@ -1,10 +1,11 @@
-import { MockUser } from "../../App";
+import { MockUser } from '../../types';
 
 export const mockUsers: MockUser[] = [
   {
     email: 'alex@example.com',
     password: 'password123',
     name: 'Alex Rivera',
+    company: 'Evergreen Health Systems',
     customerName: 'Northstar Clinic Group',
     monthlyBudget: 26000,
     budgetNote: 'Implementation spend is pacing below the launch budget.',
@@ -51,6 +52,7 @@ export const mockUsers: MockUser[] = [
     email: 'sam@example.com',
     password: 'support2026',
     name: 'Sam Morgan',
+    company: 'Bluewater Commerce Co.',
     customerName: 'Harbor Retail Partners',
     monthlyBudget: 19000,
     budgetNote: 'Support costs are elevated while store rollout work finishes.',
@@ -97,6 +99,7 @@ export const mockUsers: MockUser[] = [
     email: 'jordan@example.com',
     password: 'dashboard',
     name: 'Jordan Lee',
+    company: 'Pinnacle Service Group',
     customerName: 'Summit Field Operations',
     monthlyBudget: 34000,
     budgetNote: 'Field automation work is trending close to the approved cap.',
