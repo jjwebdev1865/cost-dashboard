@@ -1,5 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import './App.css';
+import { mockUsers } from './assets/data';
 
 type Expense = {
   category: string;
@@ -14,7 +15,21 @@ type ProjectPhase = {
   color: string;
 };
 
-type MockUser = {
+type CostForecast = {
+  month: string;
+  amount: number;
+};
+
+type CustomerCostProfile = {
+  customerName: string;
+  monthlyBudget: number;
+  budgetNote: string;
+  monthlyExpenses: Expense[];
+  projectHours: ProjectPhase[];
+  costForecast: CostForecast[];
+};
+
+export type MockUser = CustomerCostProfile & {
   email: string;
   password: string;
   name: string;
@@ -22,52 +37,49 @@ type MockUser = {
 
 type Page = 'dashboard' | 'login';
 
-const monthlyExpenses: Expense[] = [
-  {
-    category: 'Strategy',
-    description: 'Planning, discovery, and project coordination',
-    amount: 2850,
-    color: '#2f7d6d',
-  },
-  {
-    category: 'Design',
-    description: 'Wireframes, interface polish, and review cycles',
-    amount: 3200,
-    color: '#d17832',
-  },
-  {
-    category: 'Development',
-    description: 'Application features, integrations, and fixes',
-    amount: 7400,
-    color: '#4267ac',
-  },
-  {
-    category: 'Support',
-    description: 'QA, launch help, and monthly maintenance',
-    amount: 1550,
-    color: '#7a5a9e',
-  },
-];
-
-const projectHours: ProjectPhase[] = [
-  { name: 'Planning', hours: 22, color: '#2f7d6d' },
-  { name: 'Design', hours: 34, color: '#d17832' },
-  { name: 'Build', hours: 76, color: '#4267ac' },
-  { name: 'QA', hours: 18, color: '#7a5a9e' },
-];
-
-const costForecast = [
-  { month: 'May', amount: 12800 },
-  { month: 'Jun', amount: 15000 },
-  { month: 'Jul', amount: 13850 },
-  { month: 'Aug', amount: 12100 },
-];
-
-const mockUsers: MockUser[] = [
-  { email: 'alex@example.com', password: 'password123', name: 'Alex Rivera' },
-  { email: 'sam@example.com', password: 'support2026', name: 'Sam Morgan' },
-  { email: 'jordan@example.com', password: 'dashboard', name: 'Jordan Lee' },
-];
+const defaultCostProfile: CustomerCostProfile = {
+  customerName: 'Acme Services',
+  monthlyBudget: 20800,
+  budgetNote: 'Tracking under the planned monthly project budget.',
+  monthlyExpenses: [
+    {
+      category: 'Strategy',
+      description: 'Planning, discovery, and project coordination',
+      amount: 2850,
+      color: '#2f7d6d',
+    },
+    {
+      category: 'Design',
+      description: 'Wireframes, interface polish, and review cycles',
+      amount: 3200,
+      color: '#d17832',
+    },
+    {
+      category: 'Development',
+      description: 'Application features, integrations, and fixes',
+      amount: 7400,
+      color: '#4267ac',
+    },
+    {
+      category: 'Support',
+      description: 'QA, launch help, and monthly maintenance',
+      amount: 1550,
+      color: '#7a5a9e',
+    },
+  ],
+  projectHours: [
+    { name: 'Planning', hours: 22, color: '#2f7d6d' },
+    { name: 'Design', hours: 34, color: '#d17832' },
+    { name: 'Build', hours: 76, color: '#4267ac' },
+    { name: 'QA', hours: 18, color: '#7a5a9e' },
+  ],
+  costForecast: [
+    { month: 'May', amount: 12800 },
+    { month: 'Jun', amount: 15000 },
+    { month: 'Jul', amount: 13850 },
+    { month: 'Aug', amount: 12100 },
+  ],
+};
 
 const currencyFormatter = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -82,6 +94,8 @@ function App() {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
+  const activeCostProfile = currentUser ?? defaultCostProfile;
+  const { monthlyExpenses, projectHours, costForecast } = activeCostProfile;
   const totalExpenses = monthlyExpenses.reduce(
     (total, expense) => total + expense.amount,
     0
@@ -89,6 +103,9 @@ function App() {
   const totalHours = projectHours.reduce((total, phase) => total + phase.hours, 0);
   const highestMonthlyCost = Math.max(...costForecast.map((item) => item.amount));
   const highestPhaseHours = Math.max(...projectHours.map((phase) => phase.hours));
+  const budgetUsed = Math.round(
+    (totalExpenses / activeCostProfile.monthlyBudget) * 100
+  );
 
   const handleAuthButtonClick = () => {
     if (currentUser) {
@@ -179,11 +196,14 @@ function App() {
               <p className="eyebrow">Client cost preview</p>
               <h1>Know what this month is going to cost before the invoice arrives.</h1>
               <p className="hero-summary">
-                A clear monthly view of project spend, where the money is going, and
-                how many hours have been worked across the project.
+                A clear monthly view for {activeCostProfile.customerName}, showing
+                where the money is going and how many hours have been worked.
               </p>
               {currentUser && (
-                <p className="welcome-message">Welcome back, {currentUser.name}.</p>
+                <p className="welcome-message">
+                  Welcome back, {currentUser.name}. You are viewing{' '}
+                  {currentUser.customerName}.
+                </p>
               )}
             </div>
 
@@ -197,8 +217,8 @@ function App() {
           <section className="metrics-grid" aria-label="Monthly cost summary">
             <article className="summary-card">
               <span className="summary-label">Monthly budget used</span>
-              <strong>72%</strong>
-              <p>Tracking under the planned monthly project budget.</p>
+              <strong>{budgetUsed}%</strong>
+              <p>{activeCostProfile.budgetNote}</p>
             </article>
             <article className="summary-card">
               <span className="summary-label">Hours worked</span>
