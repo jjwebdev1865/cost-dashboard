@@ -1,38 +1,358 @@
-.App {
+:root {
+  --ink: #17211f;
+  --muted: #63716e;
+  --line: #d8e0dc;
+  --panel: #ffffff;
+  --wash: #f4f7f4;
+  --accent: #2f7d6d;
+  --accent-dark: #205d51;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--wash);
+  color: var(--ink);
+}
+
+.dashboard-shell {
+  min-height: 100vh;
+  padding: 32px;
+}
+
+.hero-panel,
+.metrics-grid,
+.content-grid,
+.hours-panel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.hero-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 24px;
+  align-items: stretch;
+  padding: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(47, 125, 109, 0.94), rgba(32, 93, 81, 0.95)),
+    url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1400&q=80');
+  background-position: center;
+  background-size: cover;
+  color: #ffffff;
+}
+
+.hero-copy {
+  max-width: 720px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero-copy h1 {
+  max-width: 780px;
+  margin: 0;
+  font-size: clamp(2.2rem, 5vw, 4.7rem);
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.hero-summary {
+  max-width: 630px;
+  margin: 22px 0 0;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.total-card {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+}
+
+.total-card span,
+.summary-label {
+  color: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.total-card strong {
+  display: block;
+  margin-top: 8px;
+  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  line-height: 1;
+}
+
+.total-card p,
+.summary-card p,
+.expense-row p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.total-card p {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.summary-card,
+.expenses-panel,
+.forecast-panel,
+.hours-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 14px 40px rgba(31, 49, 45, 0.07);
+}
+
+.summary-card {
+  padding: 22px;
+}
+
+.summary-card strong {
+  display: block;
+  margin-top: 8px;
+  color: var(--accent-dark);
+  font-size: 2.1rem;
+}
+
+.summary-label {
+  color: var(--muted);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.8fr);
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.expenses-panel,
+.forecast-panel,
+.hours-panel {
+  padding: 26px;
+}
+
+.section-heading {
+  margin-bottom: 20px;
+}
+
+.section-heading .eyebrow {
+  color: var(--accent-dark);
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: 1.55rem;
+}
+
+.expense-list {
+  display: grid;
+  gap: 12px;
+}
+
+.expense-row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.expense-marker {
+  width: 12px;
+  height: 58px;
+  border-radius: 8px;
+}
+
+.expense-row h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.expense-amount {
+  min-width: 112px;
+  text-align: right;
+}
+
+.expense-amount strong {
+  display: block;
+  font-size: 1.12rem;
+}
+
+.expense-amount span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.forecast-chart {
+  display: grid;
+  min-height: 320px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.forecast-bar-group {
+  display: grid;
+  min-width: 0;
+  grid-template-rows: auto 220px auto;
+  gap: 10px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.forecast-value {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.forecast-track {
   display: flex;
-  flex-direction: column;
+  align-items: flex-end;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e8eee9;
+}
+
+.forecast-bar {
+  width: 100%;
+  min-height: 18px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, #4267ac, #2f7d6d);
+}
+
+.forecast-bar-group span,
+.hours-label span {
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.hours-panel {
+  margin-top: 18px;
+}
+
+.hours-chart {
+  display: grid;
+  gap: 18px;
+}
+
+.hours-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 18px;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.hours-label strong,
+.hours-label span {
+  display: block;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.hours-label strong {
+  margin-bottom: 4px;
+}
+
+.hours-track {
+  height: 34px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #e8eee9;
+}
+
+.hours-bar {
+  height: 100%;
+  min-width: 28px;
+  border-radius: 8px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-shell {
+    padding: 18px;
   }
-  to {
-    transform: rotate(360deg);
+
+  .hero-panel,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-panel {
+    padding: 26px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-shell {
+    padding: 12px;
+  }
+
+  .hero-panel,
+  .expenses-panel,
+  .forecast-panel,
+  .hours-panel {
+    padding: 20px;
+  }
+
+  .expense-row {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+
+  .expense-amount {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .forecast-chart {
+    min-height: 260px;
+    gap: 8px;
+  }
+
+  .forecast-bar-group {
+    grid-template-rows: auto 170px auto;
+  }
+
+  .forecast-value {
+    font-size: 0.74rem;
+  }
+
+  .hours-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
   }
 }
