@@ -8,7 +8,7 @@ import {
   YAxis,
 } from 'recharts';
 import './App.css';
-import { mockUsers } from './assets/data';
+import { mockTeam, mockUsers } from './assets/data';
 import { useAuthStore } from './stores/authStore';
 import { MockUser } from './types';
 
@@ -341,7 +341,7 @@ function App() {
         {currentRoute === '/' && (isLoggedIn ? renderDashboard() : renderWelcomePage())}
         {currentRoute === '/login' && renderLoginPage()}
         {currentRoute === '/signup' && renderSignupPage()}
-        {currentRoute === '/support' && <PlaceholderPage title="Support" />}
+        {currentRoute === '/support' && <SupportPage />}
         {currentRoute === '/my-expenses' && renderExpensesPage()}
         {currentRoute === '/settings' && (
           <SettingsPage
@@ -357,11 +357,50 @@ function App() {
   );
 }
 
-function PlaceholderPage({ title }: { title: string }) {
+function SupportPage() {
   return (
-    <section className="placeholder-page" aria-labelledby="placeholder-heading">
-      <p className="eyebrow">{title}</p>
-      <h1 id="placeholder-heading">Hello world</h1>
+    <section className="support-page" aria-labelledby="support-heading">
+      <div className="support-hero">
+        <div>
+          <p className="eyebrow">Support</p>
+          <h1 id="support-heading">We are here to help</h1>
+          <p>
+            Reach out to our customer success team for onboarding help, billing
+            questions, and technical support.
+          </p>
+        </div>
+      </div>
+
+      <section className="meet-the-team" aria-labelledby="meet-the-team-heading">
+        <div className="section-heading">
+          <p className="eyebrow">Customer success</p>
+          <h2 id="meet-the-team-heading">Meet the Team</h2>
+          <p>
+            These specialists work with your account and can help with launches,
+            integrations, and ongoing care.
+          </p>
+        </div>
+
+        <ul className="team-list">
+          {mockTeam.map((member) => (
+            <li key={member.email}>
+              <article className="team-card">
+                <div className="team-avatar" aria-hidden="true">
+                  <span>{member.name.charAt(0)}</span>
+                </div>
+                <div className="team-card-body">
+                  <h3>{member.name}</h3>
+                  <p className="team-role">{member.role}</p>
+                  <p className="team-bio">{member.bio}</p>
+                  <a className="team-email" href={`mailto:${member.email}`}>
+                    {member.email}
+                  </a>
+                </div>
+              </article>
+            </li>
+          ))}
+        </ul>
+      </section>
     </section>
   );
 }

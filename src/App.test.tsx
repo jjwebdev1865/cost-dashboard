@@ -51,7 +51,11 @@ test('navigates between top navigation links', () => {
   loginAsAlex();
 
   fireEvent.click(screen.getByRole('link', { name: /support/i }));
-  expect(screen.getByRole('heading', { name: /hello world/i })).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: /we are here to help/i })
+  ).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /meet the team/i })).toBeInTheDocument();
+  expect(screen.getByText(/morgan ellis/i)).toBeInTheDocument();
   expect(screen.getAllByText(/support/i).length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole('link', { name: /my expenses/i }));

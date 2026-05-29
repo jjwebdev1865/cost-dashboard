@@ -31,3 +31,10 @@ export type MockUser = CustomerCostProfile & {
   name: string;
   company: string;
 };
+
+export type TeamMember = {
+  name: string;
+  role: string;
+  email: string;
+  bio: string;
+};
