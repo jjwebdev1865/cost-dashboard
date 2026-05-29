@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from './App';
 import { useAuthStore } from './stores/authStore';
 
@@ -58,6 +58,24 @@ test('navigates between top navigation links', () => {
   expect(screen.getByText(/morgan ellis/i)).toBeInTheDocument();
   expect(screen.getAllByText(/support/i).length).toBeGreaterThan(0);
 
+  fireEvent.click(screen.getByRole('button', { name: /open support form/i }));
+  expect(
+    screen.getByRole('dialog', { name: /tell us what you need/i })
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText(/customer name/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/customer phone number/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/customer email/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/issue subject line/i)).toBeInTheDocument();
+  expect(screen.getByLabelText(/issue description/i)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /send/i })).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+  expect(
+    screen.queryByRole('dialog', { name: /tell us what you need/i })
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /click here for support/i })).not.toBeInTheDocument();
+
   fireEvent.click(screen.getByRole('link', { name: /my expenses/i }));
   expect(
     screen.getByRole('heading', { name: /client spending overview/i })
@@ -66,6 +84,54 @@ test('navigates between top navigation links', () => {
 
   fireEvent.click(screen.getByRole('link', { name: /home/i }));
   expect(screen.getByRole('heading', { name: /welcome back, alex rivera/i })).toBeInTheDocument();
+});
+
+test('submits support request and shows success snackbar', async () => {
+  const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+  const supportPayload = {
+    customerName: 'Jane Doe',
+    customerPhone: '555-0100',
+    customerEmail: 'jane@example.com',
+    issueSubject: 'Billing question',
+    issueDescription: 'Need help reviewing the latest invoice.',
+  };
+
+  render(<App />);
+  loginAsAlex();
+
+  fireEvent.click(screen.getByRole('link', { name: /support/i }));
+  fireEvent.click(screen.getByRole('button', { name: /open support form/i }));
+  fireEvent.change(screen.getByLabelText(/customer name/i), {
+    target: { value: supportPayload.customerName },
+  });
+  fireEvent.change(screen.getByLabelText(/customer phone number/i), {
+    target: { value: supportPayload.customerPhone },
+  });
+  fireEvent.change(screen.getByLabelText(/customer email/i), {
+    target: { value: supportPayload.customerEmail },
+  });
+  fireEvent.change(screen.getByLabelText(/issue subject line/i), {
+    target: { value: supportPayload.issueSubject },
+  });
+  fireEvent.change(screen.getByLabelText(/issue description/i), {
+    target: { value: supportPayload.issueDescription },
+  });
+
+  await act(async () => {
+    fireEvent.click(screen.getByRole('button', { name: /send/i }));
+  });
+
+  await waitFor(() => {
+    expect(consoleSpy).toHaveBeenCalledWith(supportPayload);
+  });
+  expect(
+    screen.queryByRole('dialog', { name: /tell us what you need/i })
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText(/your support request has been submitted successfully/i)
+  ).toBeInTheDocument();
+
+  consoleSpy.mockRestore();
 });
 
 test('opens the settings dropdown from the top navigation', () => {

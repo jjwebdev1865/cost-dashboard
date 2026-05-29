@@ -35,6 +35,13 @@ export type MockUser = CustomerCostProfile & {
 export type TeamMember = {
   name: string;
   role: string;
-  email: string;
   bio: string;
+};
+
+export type SupportRequestFormValues = {
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  issueSubject: string;
+  issueDescription: string;
 };

@@ -1,4 +1,6 @@
+import Snackbar from '@mui/material/Snackbar';
 import React, { FormEvent, MouseEvent, useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import {
   Bar,
   BarChart,
@@ -10,7 +12,7 @@ import {
 import './App.css';
 import { mockTeam, mockUsers } from './assets/data';
 import { useAuthStore } from './stores/authStore';
-import { MockUser } from './types';
+import { MockUser, SupportRequestFormValues } from './types';
 
 type RoutePath =
   | '/'
@@ -357,7 +359,39 @@ function App() {
   );
 }
 
+const supportRequestDefaultValues: SupportRequestFormValues = {
+  customerName: '',
+  customerPhone: '',
+  customerEmail: '',
+  issueSubject: '',
+  issueDescription: '',
+};
+
 function SupportPage() {
+  const [isSupportDrawerOpen, setIsSupportDrawerOpen] = useState(false);
+  const [isSubmitSnackbarOpen, setIsSubmitSnackbarOpen] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<SupportRequestFormValues>({
+    defaultValues: supportRequestDefaultValues,
+  });
+
+  const openSupportDrawer = () => setIsSupportDrawerOpen(true);
+
+  const closeSupportDrawer = () => {
+    setIsSupportDrawerOpen(false);
+    reset(supportRequestDefaultValues);
+  };
+
+  const onSupportSubmit = (data: SupportRequestFormValues) => {
+    console.log(data);
+    closeSupportDrawer();
+    setIsSubmitSnackbarOpen(true);
+  };
+
   return (
     <section className="support-page" aria-labelledby="support-heading">
       <div className="support-hero">
@@ -371,6 +405,24 @@ function SupportPage() {
         </div>
       </div>
 
+      <section className="support-contact-panel" aria-labelledby="support-contact-heading">
+        <div>
+          <p className="eyebrow">Get Help</p>
+          <h2 id="support-contact-heading">Submit a support request</h2>
+          <p>
+            Open the support form to share your contact details and describe the
+            issue you need help with.
+          </p>
+        </div>
+        <button
+          className="continue-button support-open-button"
+          type="button"
+          onClick={openSupportDrawer}
+        >
+          Open support form
+        </button>
+      </section>
+
       <section className="meet-the-team" aria-labelledby="meet-the-team-heading">
         <div className="section-heading">
           <p className="eyebrow">Customer success</p>
@@ -383,7 +435,7 @@ function SupportPage() {
 
         <ul className="team-list">
           {mockTeam.map((member) => (
-            <li key={member.email}>
+            <li key={member.name}>
               <article className="team-card">
                 <div className="team-avatar" aria-hidden="true">
                   <span>{member.name.charAt(0)}</span>
@@ -392,15 +444,154 @@ function SupportPage() {
                   <h3>{member.name}</h3>
                   <p className="team-role">{member.role}</p>
                   <p className="team-bio">{member.bio}</p>
-                  <a className="team-email" href={`mailto:${member.email}`}>
-                    {member.email}
-                  </a>
                 </div>
               </article>
             </li>
           ))}
         </ul>
       </section>
+
+      {isSupportDrawerOpen && (
+        <div className="support-drawer-root">
+          <button
+            className="support-drawer-backdrop"
+            type="button"
+            aria-label="Close support form"
+            onClick={closeSupportDrawer}
+          />
+          <aside
+            className="support-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="support-drawer-heading"
+          >
+            <form
+              className="support-drawer-form"
+              onSubmit={handleSubmit(onSupportSubmit)}
+            >
+              <div className="support-drawer-body">
+                <div className="support-drawer-header">
+                  <p className="eyebrow">Support request</p>
+                  <h2 id="support-drawer-heading">Tell us what you need</h2>
+                </div>
+
+                <label htmlFor="customer-name">Customer name</label>
+              <input
+                id="customer-name"
+                type="text"
+                autoComplete="name"
+                {...register('customerName', { required: 'Customer name is required.' })}
+              />
+              {errors.customerName && (
+                <p className="support-form-error" role="alert">
+                  {errors.customerName.message}
+                </p>
+              )}
+
+              <label htmlFor="customer-phone">Customer phone number</label>
+              <input
+                id="customer-phone"
+                type="tel"
+                autoComplete="tel"
+                {...register('customerPhone', {
+                  required: 'Customer phone number is required.',
+                })}
+              />
+              {errors.customerPhone && (
+                <p className="support-form-error" role="alert">
+                  {errors.customerPhone.message}
+                </p>
+              )}
+
+              <label htmlFor="customer-email">Customer email</label>
+              <input
+                id="customer-email"
+                type="email"
+                autoComplete="email"
+                {...register('customerEmail', {
+                  required: 'Customer email is required.',
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Enter a valid email address.',
+                  },
+                })}
+              />
+              {errors.customerEmail && (
+                <p className="support-form-error" role="alert">
+                  {errors.customerEmail.message}
+                </p>
+              )}
+
+              <label htmlFor="issue-subject">Issue subject line</label>
+              <input
+                id="issue-subject"
+                type="text"
+                {...register('issueSubject', { required: 'Issue subject is required.' })}
+              />
+              {errors.issueSubject && (
+                <p className="support-form-error" role="alert">
+                  {errors.issueSubject.message}
+                </p>
+              )}
+
+              <label htmlFor="issue-description">Issue description</label>
+              <textarea
+                id="issue-description"
+                rows={5}
+                {...register('issueDescription', {
+                  required: 'Issue description is required.',
+                })}
+              />
+              {errors.issueDescription && (
+                <p className="support-form-error" role="alert">
+                  {errors.issueDescription.message}
+                </p>
+              )}
+              </div>
+
+              <footer className="support-drawer-footer">
+                <button
+                  className="support-secondary-button"
+                  type="button"
+                  onClick={closeSupportDrawer}
+                >
+                  Cancel
+                </button>
+                <button className="continue-button" type="submit">
+                  Send
+                </button>
+              </footer>
+            </form>
+          </aside>
+        </div>
+      )}
+
+      <Snackbar
+        open={isSubmitSnackbarOpen}
+        autoHideDuration={5000}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={(_, reason) => {
+          if (reason === 'clickaway') {
+            return;
+          }
+
+          setIsSubmitSnackbarOpen(false);
+        }}
+        message="Your support request has been submitted successfully."
+        sx={{
+          left: '50%',
+          right: 'auto',
+          transform: 'translateX(-50%)',
+          '& .MuiSnackbarContent-root': {
+            backgroundColor: '#2f7d6d',
+            color: '#ffffff',
+            fontWeight: 700,
+          },
+          '& .MuiSnackbarContent-message': {
+            color: '#ffffff',
+          },
+        }}
+      />
     </section>
   );
 }

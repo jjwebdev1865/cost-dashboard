@@ -4,37 +4,31 @@ export const mockTeam: TeamMember[] = [
   {
     name: 'Morgan Ellis',
     role: 'Director of Customer Success',
-    email: 'morgan.ellis@example.com',
     bio: 'Leads account strategy and keeps long-term client relationships on track.',
   },
   {
     name: 'Priya Shah',
     role: 'Senior Support Engineer',
-    email: 'priya.shah@example.com',
     bio: 'Handles escalations, integrations, and complex troubleshooting for enterprise clients.',
   },
   {
     name: 'Chris Dalton',
     role: 'Implementation Specialist',
-    email: 'chris.dalton@example.com',
     bio: 'Guides new customers through onboarding, data migration, and launch planning.',
   },
   {
     name: 'Taylor Brooks',
     role: 'Client Success Manager',
-    email: 'taylor.brooks@example.com',
     bio: 'Coordinates quarterly reviews, roadmap updates, and day-to-day account check-ins.',
   },
   {
     name: 'Jamie Ortiz',
     role: 'Support Coordinator',
-    email: 'jamie.ortiz@example.com',
     bio: 'Routes incoming requests and makes sure every ticket reaches the right specialist.',
   },
   {
     name: 'Riley Chen',
     role: 'Training & Enablement Lead',
-    email: 'riley.chen@example.com',
     bio: 'Runs workshops, office hours, and admin training for customer teams.',
   },
 ];
