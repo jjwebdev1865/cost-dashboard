@@ -271,6 +271,45 @@ test('shows client spend totals on the expenses page', () => {
   expect(screen.getAllByText('$30,000').length).toBeGreaterThan(0);
 });
 
+const loginAsJim = () => {
+  clickLoginButton();
+  fireEvent.change(screen.getByLabelText(/email/i), {
+    target: { value: 'jamesjiracek@email.com' },
+  });
+  fireEvent.change(screen.getByLabelText(/password/i), {
+    target: { value: 'Password1!' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+};
+
+test('shows the companies tab only for admin users', () => {
+  render(<App />);
+  loginAsAlex();
+
+  expect(screen.queryByRole('link', { name: /companies/i })).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByLabelText(/logout/i));
+
+  loginAsJim();
+
+  expect(screen.getByRole('link', { name: /companies/i })).toBeInTheDocument();
+});
+
+test('lists subscribing companies on the companies page', () => {
+  render(<App />);
+  loginAsJim();
+
+  fireEvent.click(screen.getByRole('link', { name: /companies/i }));
+
+  expect(
+    screen.getByRole('heading', { name: /subscribing companies/i })
+  ).toBeInTheDocument();
+  expect(screen.getByText(/evergreen health systems/i)).toBeInTheDocument();
+  expect(screen.getByText(/bluewater commerce co\./i)).toBeInTheDocument();
+  expect(screen.getByText(/pinnacle service group/i)).toBeInTheDocument();
+  expect(screen.getAllByText(/active/i).length).toBeGreaterThan(0);
+});
+
 test('links from login to the create account page', () => {
   render(<App />);
 

@@ -177,6 +177,7 @@ body[data-theme='dark'] {
 .home-dashboard,
 .welcome-page,
 .expenses-page,
+.companies-page,
 .support-page,
 .login-page,
 .placeholder-page,
@@ -378,6 +379,7 @@ body[data-theme='dark'] {
 }
 
 .expenses-page,
+.companies-page,
 .support-page {
   display: grid;
   gap: 18px;
@@ -727,6 +729,85 @@ body[data-theme='dark'] {
   color: var(--accent-dark);
   font-size: 1.22rem;
   white-space: nowrap;
+}
+
+.companies-hero {
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.companies-list {
+  display: grid;
+  gap: 12px;
+}
+
+.company-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.company-row h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.company-row > div > p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.company-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  min-width: min(100%, 420px);
+}
+
+.company-meta div {
+  display: grid;
+  gap: 4px;
+}
+
+.company-meta dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.company-meta dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.company-status {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.company-status-active {
+  color: #1f5f52;
+  background: color-mix(in srgb, #2f7d6d 18%, transparent);
+}
+
+.company-status-trial {
+  color: #7a4d12;
+  background: color-mix(in srgb, #d17832 18%, transparent);
 }
 
 .expense-list {

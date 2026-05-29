@@ -25,11 +25,23 @@ export type CustomerCostProfile = {
   costForecast: CostForecast[];
 };
 
+export type UserRole = 'admin' | 'customer';
+
 export type MockUser = CustomerCostProfile & {
   email: string;
   password: string;
   name: string;
   company: string;
+  role: UserRole;
+};
+
+export type SubscriberCompany = {
+  id: string;
+  name: string;
+  primaryContact: string;
+  clientAccount: string;
+  subscriptionPlan: string;
+  status: 'Active' | 'Trial';
 };
 
 export type TeamMember = {

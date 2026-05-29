@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts';
 import './App.css';
-import { mockTeam, mockUsers } from './assets/data';
+import { mockCompanies, mockTeam, mockUsers } from './assets/data';
 import { useAuthStore } from './stores/authStore';
 import { MockUser, SupportRequestFormValues } from './types';
 
@@ -21,7 +21,8 @@ type RoutePath =
   | '/support'
   | '/my-expenses'
   | '/settings'
-  | '/profile';
+  | '/profile'
+  | '/companies';
 
 type ThemeMode = 'light' | 'dark';
 
@@ -58,7 +59,12 @@ const routePaths: RoutePath[] = [
   '/my-expenses',
   '/settings',
   '/profile',
+  '/companies',
 ];
+
+const isAdminUser = (user: MockUser | null) => user?.role === 'admin';
+
+const customerUsers = mockUsers.filter((user) => user.role === 'customer');
 
 const getCurrentRoute = (): RoutePath => {
   const path = window.location.pathname;
@@ -289,6 +295,17 @@ function App() {
               >
                 Support
               </a>
+              {isAdminUser(currentUser) && (
+                <a
+                  className={`nav-link${
+                    currentRoute === '/companies' ? ' active' : ''
+                  }`}
+                  href="/companies"
+                  onClick={(event) => handleNavigationClick(event, '/companies')}
+                >
+                  Companies
+                </a>
+              )}
             </div>
 
             <div className="nav-actions">
@@ -354,6 +371,9 @@ function App() {
           />
         )}
         {currentRoute === '/profile' && <ProfilePage currentUser={currentUser} />}
+        {currentRoute === '/companies' && isAdminUser(currentUser) && (
+          <CompaniesPage />
+        )}
       </main>
     </>
   );
@@ -762,8 +782,53 @@ function SettingsPage({
   );
 }
 
+function CompaniesPage() {
+  return (
+    <section className="companies-page" aria-labelledby="companies-heading">
+      <div className="companies-hero">
+        <div>
+          <p className="eyebrow">Administration</p>
+          <h1 id="companies-heading">Subscribing companies</h1>
+          <p>
+            Companies with an active subscription to the customer service platform.
+          </p>
+        </div>
+      </div>
+
+      <section className="companies-list" aria-label="Subscribing companies">
+        {mockCompanies.map((company) => (
+          <article className="company-row" key={company.id}>
+            <div>
+              <h3>{company.name}</h3>
+              <p>{company.clientAccount}</p>
+            </div>
+            <dl className="company-meta">
+              <div>
+                <dt>Primary contact</dt>
+                <dd>{company.primaryContact}</dd>
+              </div>
+              <div>
+                <dt>Plan</dt>
+                <dd>{company.subscriptionPlan}</dd>
+              </div>
+              <div>
+                <dt>Status</dt>
+                <dd>
+                  <span className={`company-status company-status-${company.status.toLowerCase()}`}>
+                    {company.status}
+                  </span>
+                </dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+      </section>
+    </section>
+  );
+}
+
 function ExpensesPage({ currentUser }: { currentUser: MockUser | null }) {
-  const clientSpend = mockUsers.map((user) => ({
+  const clientSpend = customerUsers.map((user) => ({
     client: user.customerName,
     company: user.company,
     total: getTotalExpenses(user),
